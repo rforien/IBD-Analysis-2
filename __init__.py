@@ -9,3 +9,6 @@ Created on Tue Jun  6 20:17:42 2023
 __all__ = ['mle_model', 'models', 'hetero_sharing']
 
 from .mle_model import MLE_model
+from . import models
+from . import hetero_sharing
+from . import migration_matrix
