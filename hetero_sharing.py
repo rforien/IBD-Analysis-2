@@ -10,7 +10,7 @@ import scipy.spatial.distance as dist
 from scipy.stats import hmean
 import matplotlib.pyplot as plt
 
-from migration_matrix import migration_matrix
+from .migration_matrix import migration_matrix
 
 def ibd_sharing(coordinates, L, step, bin_lengths, G, sigma, population_sizes, pw_growth_rate=0, balance='isotropic',
                 max_generation=200, cumul = False):
