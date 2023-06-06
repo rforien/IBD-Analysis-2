@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.special as sp
 
-import hetero_sharing as hs
+from . import hetero_sharing as hs
 
 def F(p, nu, alpha):
     return 2 * (alpha / (4 * p))**(nu/2) * sp.kv(nu, np.sqrt(alpha * p))
