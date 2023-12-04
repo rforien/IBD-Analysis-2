@@ -157,7 +157,7 @@ class MLE_model(GenericLikelihoodModel):
             names = ['Both samples from the left',
                      'Both samples from the right',
                      'Samples from different sides']
-            colors = ['red', 'blue', 'green']
+            colors = ['#DD0000', '#0000FF', 'green']
         
         expected_ibd = self.pairs[np.newaxis, :, :] * self.model.expected_ibd(params,
                                                                                self.length_bins)

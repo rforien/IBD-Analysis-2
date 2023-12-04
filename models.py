@@ -52,23 +52,40 @@ class Homogeneous(object):
         E_ibd = np.concatenate((-np.diff(E_geq_L, axis = 0), E_geq_L[-1,np.newaxis,:,:]),
                                axis = 0)
         return E_ibd
+
+def rotation_matrix(theta):
+    return np.array([[np.cos(theta), -np.sin(theta)],
+                     [np.sin(theta), np.cos(theta)]])
     
 class Heterogeneous(Homogeneous):
-    def __init__(self, dim, genome_length):
+    def __init__(self, dim, genome_length, infer_location = False):
         super().__init__(dim, genome_length)
         self.param_names = ['sigma+', 'sigma-', 'N+', 'N-']
+        self.infer_location = bool(infer_location)
+        if self.infer_location:
+            self.param_names = self.param_names + ['x0', 'y0', 'theta']
     
     def start_params(self):
-        return np.array([0.5, 0.5, 50, 50])
+        params = np.array([0.5, 0.5, 50, 50])
+        if self.infer_location:
+            params = np.concatenate((params, [np.mean(self.coords[:,0]), np.mean(self.coords[:,1]), np.pi / 4]))
+        return params
     
     def prepare(self, positions, length_bins):
         self.coords = positions
     
     def expected_ibd(self, params, length_bins):
         params = dict(zip(self.param_names, params))
+        print(params)
         # print(params)
         sigma = np.array([params['sigma-'], params['sigma+']])
         pop_size = np.array([params['N-'], params['N+']])
+        # shift coordinates
+        if self.infer_location:
+            coords = self.coords - np.array([[params['x0'], params['y0']]])
+            coords = (rotation_matrix(params['theta']) @ coords.T).T
+        else:
+            coords = self.coords
         step, L = hs.grid_fit(self.coords, sigma = sigma, coarse=0.05)
         L = L + (L % 2 == 0)
         bc = hs.barycentric_coordinates(self.coords, L, step)
@@ -77,5 +94,3 @@ class Heterogeneous(Homogeneous):
         E_ibd = np.concatenate((-np.diff(E_ibd_cumul, axis = 0), E_ibd_cumul[-1,np.newaxis,:,:]),
                                axis = 0)
         return E_ibd
-
-    
