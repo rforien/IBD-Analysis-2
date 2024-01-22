@@ -87,7 +87,7 @@ class Heterogeneous(Homogeneous):
         else:
             coords = self.coords
         step, L = hs.grid_fit(self.coords, sigma = sigma, coarse=0.05)
-        L = L + (L % 2 == 0)
+        L = L + (L % 2)
         bc = hs.barycentric_coordinates(self.coords, L, step)
         E_ibd_cumul = hs.ibd_sharing(bc, L, step, length_bins, self.G, sigma, pop_size,
                                      cumul = True, balance = 'symmetric')

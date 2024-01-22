@@ -10,12 +10,40 @@ import scipy.spatial.distance as dist
 from scipy.stats import hmean
 import matplotlib.pyplot as plt
 
-from .migration_matrix import migration_matrix
+# from migration_matrix import migration_matrix
+
+def lineage_migration_matrix(L, step, sigma2, beta):
+    assert (L%2==0), "Grid size should be even."
+    assert np.size(sigma2) == 2 and np.min(sigma2) > 0
+    assert beta > -1 and beta < 1
+    mid = int(L/2)
+    
+    sigma2 = sigma2 / step**2
+    if np.max(sigma2) >= 0.5:
+        iterates = np.ceil(np.max(sigma2) / 0.45).astype(int)
+    else:
+        iterates = 1
+    sigma2 = sigma2 / iterates
+    
+    vertical = np.tile(np.repeat(sigma2/2, mid), L-1)
+    H = np.repeat(sigma2/2, mid)
+    H[-1] = 0
+    H[mid-1] = sigma2[0]/(1-beta)
+    horizontal_left = np.tile(H, L)[:-1]
+    H[mid-1] = sigma2[1]/(1+beta)
+    horizontal_right = np.tile(H, L)[:-1]
+    
+    M = sparse.diags([horizontal_left, horizontal_right, vertical, vertical],
+                     [1, -1, L, -L])
+    M.setdiag(1-np.array(M.sum(1))[:,0])
+    
+    return M ** iterates
+    
 
 def ibd_sharing(coordinates, L, step, bin_lengths, G, sigma, population_sizes, pw_growth_rate=0, balance='isotropic',
                 max_generation=200, cumul = False):
     '''
-    Compute the IBD sharing density.
+    Compute the IBD sharing density. (doc needs to be updated)
     positions: Should contain the positions of samples on the grid as np.array([[x1, y1], [x2, y2]]) etc
     bin_lengths: should be a np.array containing the different bin lengths
     max_generations is the stopping point for the integral over generations back in time
@@ -25,7 +53,10 @@ def ibd_sharing(coordinates, L, step, bin_lengths, G, sigma, population_sizes, p
     '''
     # print L, step, sigma
     # print "Creating migration matrix..."
-    M = migration_matrix(L, np.concatenate(((sigma / step) ** 2, population_sizes)), balance)  # create migration matrix
+    # M = migration_matrix(L, np.concatenate(((sigma / step) ** 2, population_sizes)), balance)  # create migration matrix
+    u = population_sizes * sigma**2
+    beta = (u[1] - u[0]) / np.sum(u)
+    M = lineage_migration_matrix(L, step, sigma**2, beta)
     # print "migration matrix created."
     # print step**2*variance(M[mid+mid*L,:].todense().reshape((L,L)))
     bin_lengths = bin_lengths.astype(float)
@@ -46,14 +77,18 @@ def ibd_sharing(coordinates, L, step, bin_lengths, G, sigma, population_sizes, p
     
     if L % 2 == 0:
         mid = L / 2
+        pop_sizes = sparse.diags(np.tile(np.repeat(population_sizes.astype(float), mid), L))
         inv_pop_sizes = sparse.diags(np.tile(np.repeat(1 / population_sizes.astype(float), mid), L))
     else:
         mid = int((L - 1) / 2)
         diag = 1 / np.concatenate((population_sizes[0] * np.ones(mid), 
                                      [np.mean(population_sizes)], 
                                      population_sizes[1] * np.ones(mid)))
+        pop_sizes = sparse.diags(np.tile(1/diag, L))
         inv_pop_sizes = sparse.diags(np.tile(diag, L))
     # print inv_pop_sizes.todense()
+    
+    P = pop_sizes @ M.transpose() @ inv_pop_sizes
     
     coalescence = []
     density = np.zeros((np.size(bin_lengths), sample_size, sample_size))
@@ -63,7 +98,7 @@ def ibd_sharing(coordinates, L, step, bin_lengths, G, sigma, population_sizes, p
         coalescence = Kernel.transpose() @ inv_pop_sizes @ Kernel  # coalescence probability at generation t
         blocks = G * a * t ** (b + pw_growth_rate) * np.exp(-2.0 * bin_lengths * t)  # number of blocks of the right length at generation t
         density += np.multiply(coalescence.toarray(), blocks[:, np.newaxis, np.newaxis])  # multiply the two
-        Kernel = M @ Kernel  # update the kernel
+        Kernel = P @ Kernel  # update the kernel
     
     # print "Computing of IBD sharing complete."
     # need to divide by step**2 in the Discretisation of the spatial integral
