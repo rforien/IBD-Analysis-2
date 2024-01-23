@@ -73,32 +73,30 @@ def ibd_sharing(coordinates, L, step, bin_lengths, G, sigma, population_sizes, p
     sample_size = np.size(coordinates, 1) 
     
     # Kernel will give the spread of ancestry on the grid at each generation back in time
-    Kernel = coordinates
+    Kernel = np.transpose(coordinates)
     
     if L % 2 == 0:
         mid = L / 2
-        pop_sizes = sparse.diags(np.tile(np.repeat(population_sizes.astype(float), mid), L))
+        # pop_sizes = sparse.diags(np.tile(np.repeat(population_sizes.astype(float), mid), L))
         inv_pop_sizes = sparse.diags(np.tile(np.repeat(1 / population_sizes.astype(float), mid), L))
     else:
         mid = int((L - 1) / 2)
         diag = 1 / np.concatenate((population_sizes[0] * np.ones(mid), 
                                      [np.mean(population_sizes)], 
                                      population_sizes[1] * np.ones(mid)))
-        pop_sizes = sparse.diags(np.tile(1/diag, L))
+        # pop_sizes = sparse.diags(np.tile(1/diag, L))
         inv_pop_sizes = sparse.diags(np.tile(diag, L))
     # print inv_pop_sizes.todense()
-    
-    P = pop_sizes @ M.transpose() @ inv_pop_sizes
     
     coalescence = []
     density = np.zeros((np.size(bin_lengths), sample_size, sample_size))
     
     for t in np.arange(max_generation):  # sum over all generations
         # print("Generation: %i" % t)
-        coalescence = Kernel.transpose() @ inv_pop_sizes @ Kernel  # coalescence probability at generation t
+        coalescence = Kernel @ inv_pop_sizes @ Kernel.transpose()  # coalescence probability at generation t
         blocks = G * a * t ** (b + pw_growth_rate) * np.exp(-2.0 * bin_lengths * t)  # number of blocks of the right length at generation t
         density += np.multiply(coalescence.toarray(), blocks[:, np.newaxis, np.newaxis])  # multiply the two
-        Kernel = P @ Kernel  # update the kernel
+        Kernel = Kernel @ M  # update the kernel
     
     # print "Computing of IBD sharing complete."
     # need to divide by step**2 in the Discretisation of the spatial integral
