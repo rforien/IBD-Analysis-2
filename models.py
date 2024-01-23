@@ -76,7 +76,6 @@ class Heterogeneous(Homogeneous):
     
     def expected_ibd(self, params, length_bins):
         params = dict(zip(self.param_names, params))
-        print(params)
         # print(params)
         sigma = np.array([params['sigma-'], params['sigma+']])
         pop_size = np.array([params['N-'], params['N+']])

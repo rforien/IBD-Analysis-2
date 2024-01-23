@@ -28,9 +28,9 @@ def lineage_migration_matrix(L, step, sigma2, beta):
     vertical = np.tile(np.repeat(sigma2/2, mid), L-1)
     H = np.repeat(sigma2/2, mid)
     H[-1] = 0
-    H[mid-1] = sigma2[0]/(1-beta)
+    H[mid-1] = sigma2[0]/(2*(1-beta))
     horizontal_left = np.tile(H, L)[:-1]
-    H[mid-1] = sigma2[1]/(1+beta)
+    H[mid-1] = sigma2[1]/(2*(1+beta))
     horizontal_right = np.tile(H, L)[:-1]
     
     M = sparse.diags([horizontal_left, horizontal_right, vertical, vertical],
