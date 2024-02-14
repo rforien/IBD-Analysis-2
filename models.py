@@ -85,7 +85,7 @@ class Heterogeneous(Homogeneous):
             coords = coords @ rotation_matrix(params['theta']).T
         else:
             coords = self.coords
-        step, L = hs.grid_fit(self.coords, sigma = sigma, coarse=0.05)
+        step, L = hs.grid_fit(self.coords, sigma = sigma, coarse=0.1)
         L = L + (L % 2)
         bc = hs.barycentric_coordinates(self.coords, L, step)
         E_ibd_cumul = hs.ibd_sharing(bc, L, step, length_bins, self.G, sigma, pop_size,
