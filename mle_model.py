@@ -60,7 +60,7 @@ class MLE_model(GenericLikelihoodModel):
         counts = self.bin_counts(IBD_segments)
         self.count_pairs() # mask that will be applied to expected ibd sharing
         super().__init__(counts)
-        self.compute_vars()
+        # self.compute_vars()
         self.n_samples = np.size(sample_locations, axis = 0)
         self.model = model
         self.model.prepare(self.locations, self.length_bins)
@@ -70,7 +70,7 @@ class MLE_model(GenericLikelihoodModel):
     def bin_counts(self, IBD_segments):
         print("Binning segments counts...")
         counts = np.zeros((self.K,self.n,self.n))
-        self.squared_counts = np.zeros((self.K,self.n,self.n))
+        # self.squared_counts = np.zeros((self.K,self.n,self.n))
         for (i1, ind1) in enumerate(self.samples):
             for (i2, ind2) in enumerate(self.samples):
                 if i1 >= i2:
@@ -87,7 +87,7 @@ class MLE_model(GenericLikelihoodModel):
                 # print("binned counts between samples %d and %d, at coordinates %d, %d." % (ind1, ind2, ii1, ii2))
                 # print(bin_counts)
                 counts[:, ii1, ii2] = counts[:, ii1, ii2] + bin_counts
-                self.squared_counts[:, ii1, ii2] = self.squared_counts[:, ii1, ii2] + bin_counts**2
+                # self.squared_counts[:, ii1, ii2] = self.squared_counts[:, ii1, ii2] + bin_counts**2
         print("Done.")
         return counts
     
@@ -109,7 +109,8 @@ class MLE_model(GenericLikelihoodModel):
         expected_ibd = self.pairs[np.newaxis,:,:] * self.model.expected_ibd(params,
                                                                             self.length_bins)
         IBD_counts = self.endog
-        clogl = np.nansum(self.weights * (IBD_counts * np.log(expected_ibd) - expected_ibd))# - sp.gammaln(IBD_counts))
+        # clogl = np.nansum(self.weights * (IBD_counts * np.log(expected_ibd) - expected_ibd))# - sp.gammaln(IBD_counts))
+        clogl = np.nansum(IBD_counts * np.log(expected_ibd) - expected_ibd)# - sp.gammaln(IBD_counts))
         return clogl
     
     def fit(self, *args, **kwargs):
