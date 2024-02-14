@@ -68,7 +68,7 @@ class Heterogeneous(Homogeneous):
     def start_params(self):
         params = np.array([0.5, 0.5, 50, 50])
         if self.infer_location:
-            params = np.concatenate((params, [np.mean(self.coords[:,0]) + 0.5, np.pi / 4]))
+            params = np.concatenate((params, [1, np.pi / 6]))
         return params
     
     def prepare(self, positions, length_bins):
@@ -85,9 +85,9 @@ class Heterogeneous(Homogeneous):
             coords = coords @ rotation_matrix(params['theta']).T
         else:
             coords = self.coords
-        step, L = hs.grid_fit(self.coords, sigma = sigma, coarse=0.1)
+        step, L = hs.grid_fit(coords, sigma = sigma, coarse=0.05)
         L = L + (L % 2)
-        bc = hs.barycentric_coordinates(self.coords, L, step)
+        bc = hs.barycentric_coordinates(coords, L, step)
         E_ibd_cumul = hs.ibd_sharing(bc, L, step, length_bins, self.G, sigma, pop_size,
                                      cumul = True, balance = 'symmetric')
         E_ibd = np.concatenate((-np.diff(E_ibd_cumul, axis = 0), E_ibd_cumul[-1,np.newaxis,:,:]),
