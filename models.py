@@ -58,8 +58,10 @@ def rotation_matrix(theta):
                      [np.sin(theta), np.cos(theta)]])
     
 class Heterogeneous(Homogeneous):
-    def __init__(self, dim, genome_length, infer_location = False):
+    def __init__(self, dim, genome_length, infer_location = False, coarse = 0.05):
         super().__init__(dim, genome_length)
+	self.coarse = float(coarse)
+	assert self.coarse > 0
         self.param_names = ['sigma+', 'sigma-', 'N+', 'N-']
         self.infer_location = bool(infer_location)
         if self.infer_location:
@@ -85,7 +87,7 @@ class Heterogeneous(Homogeneous):
             coords = coords @ rotation_matrix(params['theta']).T
         else:
             coords = self.coords
-        step, L = hs.grid_fit(coords, sigma = sigma, coarse=0.05)
+        step, L = hs.grid_fit(coords, sigma = sigma, coarse=self.coarse)
         L = L + (L % 2)
         bc = hs.barycentric_coordinates(coords, L, step)
         E_ibd_cumul = hs.ibd_sharing(bc, L, step, length_bins, self.G, sigma, pop_size,
