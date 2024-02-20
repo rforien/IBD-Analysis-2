@@ -60,8 +60,8 @@ def rotation_matrix(theta):
 class Heterogeneous(Homogeneous):
     def __init__(self, dim, genome_length, infer_location = False, coarse = 0.05):
         super().__init__(dim, genome_length)
-	self.coarse = float(coarse)
-	assert self.coarse > 0
+        self.coarse = float(coarse)
+        assert self.coarse > 0
         self.param_names = ['sigma+', 'sigma-', 'N+', 'N-']
         self.infer_location = bool(infer_location)
         if self.infer_location:
